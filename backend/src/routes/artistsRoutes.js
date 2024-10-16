@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Artist = require('../models/artist'); // Import the Artist model
+const Artist = require('../models/Artist'); // Import the Artist model
 const Trie = require('../utils/trie');
 const Fuse = require('fuse.js');
 
