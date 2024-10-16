@@ -1,16 +1,20 @@
-const mongoose = require('mongoose');
+// src/config/mongoConfig.js
+
+const { MongoClient } = require('mongodb');
+
+let client;
 
 const connectDB = async () => {
+  if (client) return client; // Reuse the existing client
+
   try {
-    await mongoose.connect(process.env.MONGO_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      useCreateIndex: true
-    });
-    console.log('MongoDB Connected...');
-  } catch (err) {
-    console.error('MongoDB Connection Error:', err);
-    process.exit(1); // Exit process with failure
+    const uri = process.env.MONGO_URI;
+    client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    await client.connect();
+    return client;
+  } catch (error) {
+    console.error("Failed to connect to MongoDB:", error);
+    throw error;
   }
 };
 
