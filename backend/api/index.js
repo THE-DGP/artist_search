@@ -15,6 +15,7 @@ app.use(cors(
     origin: {"https://artist-search-bck.vercel.app/"},
     methods: ["POST", "GET"],
     credentials: true
+  }
 )); // Allow cross-origin requests
 
 app.use(express.json()); // Parse JSON requests
