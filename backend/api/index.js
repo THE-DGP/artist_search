@@ -10,7 +10,13 @@ dotenv.config();
 const connectDB = require('../src/config/mongoConfig'); // Adjusted path
 
 const app = express();
-app.use(cors()); // Allow cross-origin requests
+app.use(cors(
+  {
+    origin: {"https://artist-search-bck.vercel.app/"},
+    methods: ["POST", "GET"],
+    credentials: true
+)); // Allow cross-origin requests
+
 app.use(express.json()); // Parse JSON requests
 
 // Set up the MongoDB client globally
