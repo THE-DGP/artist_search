@@ -1,27 +1,28 @@
-const express = require('express'); // Main framework
-const cors = require('cors'); // Middleware to handle CORS
-const dotenv = require('dotenv'); // Environment variables
+// Setup Express and MongoDB connection
+const express = require('express');
+const cors = require('cors');
+const dotenv = require("dotenv");
 
-dotenv.config(); // Load environment variables
-const connectDB = require('../src/config/mongoConfig'); // Connect MongoDB
+dotenv.config();
+const connectDB = require('./src/config/mongoConfig'); 
 
-// Connect to MongoDB
-connectDB();
+connectDB(); // Connect to MongoDB
 
 const app = express();
-
-// Middlewares
-app.use(cors());
-app.use(express.json());
+app.use(cors()); // Allow cross-origin requests
+app.use(express.json()); // Parse JSON requests
 
 // Define Routes
-const artistsRoutes = require('../src/routes/artistsRoutes'); // Import artist routes
+const artistsRoutes = require('./src/routes/artistsRoutes'); 
 app.use('/api', artistsRoutes);
 
-// Test Route to confirm server is working
+// Test Route
 app.get('/', (req, res) => {
   res.send('Welcome to the Backend API connected to MongoDB');
 });
 
-// Export the app for Vercel
-module.exports = app;
+// Dynamic Port Setting
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
