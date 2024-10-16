@@ -1,28 +1,27 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const connectDB = require('./config/mongoConfig'); // Import the MongoDB connection
+const express = require('express'); // Main framework
+const cors = require('cors'); // Middleware to handle CORS
+const dotenv = require('dotenv'); // Environment variables
 
-dotenv.config(); // Configure environment variables
+dotenv.config(); // Load environment variables
+const connectDB = require('../src/config/mongoConfig'); // Connect MongoDB
 
-// Initialize Express App
+// Connect to MongoDB
+connectDB();
+
 const app = express();
 
-// Connect to MongoDB Atlas
-connectDB(); // Establish connection to MongoDB Atlas
-
 // Middlewares
-app.use(cors()); // Enable Cross-Origin Resource Sharing
-app.use(express.json()); // Parse incoming JSON requests
+app.use(cors());
+app.use(express.json());
 
-// Import and use Routes
-const artistsRoutes = require('./routes/artistsRoutes');
-app.use('/api', artistsRoutes); // All API routes will start with /api
+// Define Routes
+const artistsRoutes = require('../src/routes/artistsRoutes'); // Import artist routes
+app.use('/api', artistsRoutes);
 
-// Default Route for Health Check
+// Test Route to confirm server is working
 app.get('/', (req, res) => {
-  res.send('Welcome to the Backend API connected to MongoDB Atlas');
+  res.send('Welcome to the Backend API connected to MongoDB');
 });
 
-// Export the app as a serverless function for Vercel
-module.exports = app; // Necessary for Vercel deployment as a serverless function
+// Export the app for Vercel
+module.exports = app;
