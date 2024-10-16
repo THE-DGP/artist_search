@@ -1,31 +1,18 @@
 const express = require('express');
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const Artist = require('../models/artist'); // Import the Artist model
 const Trie = require('../utils/trie');
 const Fuse = require('fuse.js');
-require('dotenv').config();
 
-// MongoDB URI from .env file
-const uri = process.env.MONGO_URI;
-
-// Create a MongoClient with the MongoDB Atlas URI
-const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
-// Create a Trie instance and artistsData array
+// Create a Trie instance
 const artistTrie = new Trie();
 let artistsData = [];
 
 // Load artist names into the Trie, including abbreviations
 async function loadArtistsIntoTrie() {
   try {
-    await client.connect();
-    console.log('MongoDB connected for Trie population');
-
-    const db = client.db('task'); // Use the database name you set in MongoDB Atlas
-    const collection = db.collection('artists');
-
-    // Fetch all artist names from the collection
-    artistsData = await collection.find({}, { projection: { name: 1, genres: 1, location: 1 } }).toArray();
+    // Fetch all artist names from the database
+    artistsData = await Artist.find({}, { name: 1, genres: 1, location: 1 });
 
     // Insert artist names and abbreviations into the Trie
     artistsData.forEach(artist => {
@@ -85,12 +72,8 @@ router.get('/search', async (req, res) => {
   }
 
   try {
-    // Connect to the database to find full artist details
-    const db = client.db('task'); // Use the database name you set in MongoDB Atlas
-    const collection = db.collection('artists');
-
     // Fetch artist details that exactly match the artist name
-    const artistDetails = await collection.find({ name: artistName }).toArray();
+    const artistDetails = await Artist.find({ name: artistName });
 
     if (artistDetails.length === 0) {
       return res.status(404).json({ message: 'No artist found.' });
