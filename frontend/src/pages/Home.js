@@ -25,7 +25,12 @@ const Home = () => {
 
     try {
       const response = await axios.get(`https://artist-search-backend.vercel.app/api/suggest?q=${value}`);
-      setSuggestions(response.data);
+      if (Array.isArray(response.data)) {
+        setSuggestions(response.data);
+      } else {
+        setSuggestions([]); // If data isn't an array, reset suggestions
+        console.error('Unexpected response data format for suggestions:', response.data);
+      }
       setHighlightedIndex(-1);
     } catch (error) {
       console.error('Error fetching suggestions:', error);
@@ -47,8 +52,13 @@ const Home = () => {
     setSuggestions([]);
 
     try {
-      const response = await axios.get(`http://localhost:5000/api/search?q=${searchValue}`);
-      setArtistDetails(response.data);
+      const response = await axios.get(`https://artist-search-backend.vercel.app/api/search?q=${searchValue}`);
+      if (Array.isArray(response.data)) {
+        setArtistDetails(response.data);
+      } else {
+        setArtistDetails([]);
+        console.error('Unexpected response data format for artist details:', response.data);
+      }
       setIsSearchActive(true);
     } catch (error) {
       if (error.response && error.response.status === 404) {
@@ -73,7 +83,7 @@ const Home = () => {
         setHighlightedIndex((prevIndex) => (prevIndex > 0 ? prevIndex - 1 : prevIndex));
       } else if (e.key === 'Enter') {
         if (highlightedIndex >= 0 && highlightedIndex < suggestions.length) {
-          handleSearch(suggestions[highlightedIndex]);
+          handleSearch(suggestions[highlightedIndex]); // Directly passing the suggestion as query
         } else {
           handleSearch();
         }
