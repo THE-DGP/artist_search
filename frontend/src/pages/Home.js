@@ -24,7 +24,7 @@ const Home = () => {
     }
 
     try {
-      const response = await axios.get(`https://artist-search-allev.vercel.app/api/suggest?q=${value}`);
+      const response = await axios.get(`https://artist-search-backend.vercel.app/api/suggest?q=${value}`);
       setSuggestions(response.data);
       setHighlightedIndex(-1);
     } catch (error) {
