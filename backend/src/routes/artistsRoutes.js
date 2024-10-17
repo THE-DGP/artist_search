@@ -1,30 +1,41 @@
 const express = require('express');
 const router = express.Router();
-const Artist = require('../models/Artist'); // Import the Artist model
+const Artist = require('../models/Artist');
 const Trie = require('../utils/trie');
 const Fuse = require('fuse.js');
 
 // Create a Trie instance
 const artistTrie = new Trie();
-let artistsData = []; // Cached artists data to optimize suggestions
+let artistsData = [];
 
-// Load artist names into the Trie, including abbreviations
-async function loadArtistsIntoTrie() {
+// Load artist names into the Trie in Batches
+async function loadArtistsInBatches(batchSize = 1000) {
   try {
-    // Fetch artist names in a paginated fashion to avoid long load times
-    const artists = await Artist.find({}, { name: 1, genres: 1, location: 1 }).limit(5000); // Limit to avoid memory overflows
-    artistsData = artists; // Cache artist data for use in fuzzy search
+    let skip = 0;
+    let hasMore = true;
 
-    // Insert artist names and abbreviations into the Trie
-    artists.forEach(artist => {
-      if (artist.name) {
-        artistTrie.insert(artist.name, artist.name);
-        const abbreviation = artist.name.split(' ')
-                                        .map(word => word[0].toUpperCase())
-                                        .join('');
-        artistTrie.insert(abbreviation, artist.name);
+    while (hasMore) {
+      const batch = await Artist.find({}, { name: 1, genres: 1, location: 1 })
+                                .skip(skip)
+                                .limit(batchSize);
+
+      if (batch.length > 0) {
+        batch.forEach(artist => {
+          if (artist.name) {
+            artistTrie.insert(artist.name, artist.name);
+
+            // Insert abbreviations
+            const abbreviation = artist.name.split(' ')
+                                            .map(word => word[0].toUpperCase())
+                                            .join('');
+            artistTrie.insert(abbreviation, artist.name);
+          }
+        });
+        skip += batchSize;
+      } else {
+        hasMore = false;
       }
-    });
+    }
 
     console.log('Artists loaded into Trie successfully');
   } catch (err) {
@@ -33,7 +44,7 @@ async function loadArtistsIntoTrie() {
 }
 
 // Load artists into Trie when server starts
-loadArtistsIntoTrie();
+loadArtistsInBatches();
 
 // Search for artist suggestions based on a prefix using the Trie
 router.get('/suggest', (req, res) => {
