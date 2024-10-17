@@ -10,7 +10,13 @@ dotenv.config();
 const connectDB = require('../src/config/mongoConfig'); // Adjusted path
 
 const app = express();
-app.use(cors()); // Allow cross-origin requests
+// app.use(cors()); // Allow cross-origin requests
+app.use(cors({
+  origin: '*', // This allows all origins to access the API
+  methods: ['GET', 'POST', 'PUT', 'DELETE'], // Allowed HTTP methods
+  allowedHeaders: ['Content-Type', 'Authorization'] // Allowed headers
+}));
+
 
 app.use(express.json()); // Parse JSON requests
 
