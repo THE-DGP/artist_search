@@ -12,9 +12,9 @@ const connectDB = async (retries = 5, delay = 5000) => {
       const uri = process.env.MONGO_URI;
       client = new MongoClient(uri, {
         useNewUrlParser: true,
-        connectTimeoutMS: 30000, // Increase connection timeout to 30 seconds
-        serverSelectionTimeoutMS: 30000, // Increase server selection timeout to 30 seconds
-        socketTimeoutMS: 45000, // Increase socket timeout to 45 seconds
+        connectTimeoutMS: 30000, // Increased connection timeout to 30 seconds
+        serverSelectionTimeoutMS: 30000, // Increased server selection timeout to 30 seconds
+        socketTimeoutMS: 45000, // Socket timeout to 45 seconds
       });
       await client.connect();
       console.log("Successfully connected to MongoDB");
