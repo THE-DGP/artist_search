@@ -8,10 +8,10 @@ const Fuse = require('fuse.js');
 require('dotenv').config();
 
 // MongoDB URI from .env file
-const uri = process.env.MONGO_URI.trim();
+const uri = "mongodb+srv://devdgp2003:Yc1WxLqgAhUclKto@cluster0.akfzt.mongodb.net/taskretryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with the MongoDB Atlas URI
-const client = new MongoClient(uri, { useNewUrlParser: true });
+const client = await mongoose.connect(uri);
 
 // Create a Trie instance and artistsData array
 const artistTrie = new Trie();
