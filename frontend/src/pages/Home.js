@@ -52,7 +52,7 @@ const Home = () => {
     setSuggestions([]);
 
     try {
-      const response = await axios.get(`https://artist-search-backend.vercel.app/api/search?q=${searchValue}`);
+      const response = await axios.get(`https://artist-search-bck.vercel.app/api/suggest?q=${searchValue}`);
       if (Array.isArray(response.data)) {
         setArtistDetails(response.data);
       } else {
