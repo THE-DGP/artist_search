@@ -3,10 +3,7 @@
 const { MongoClient } = require('mongodb');
 require('dotenv').config();
 
-// MongoDB URI
 const uri = process.env.MONGO_URI;
-
-// Create a MongoClient
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 async function addAbbreviations() {
@@ -14,13 +11,12 @@ async function addAbbreviations() {
     await client.connect();
     console.log('MongoDB connected for adding abbreviations');
 
-    const db = client.db('task'); // Replace 'local' with your actual database name if different
+    const db = client.db('task');
     const collection = db.collection('artists');
 
-    // Fetch all artist names from the collection
     const artists = await collection.find({}).toArray();
+    const bulkUpdates = [];
 
-    // Iterate over each artist and generate abbreviation
     for (const artist of artists) {
       if (artist.name) {
         const abbreviation = artist.name
@@ -28,12 +24,19 @@ async function addAbbreviations() {
           .map(word => word[0].toUpperCase())
           .join('');
 
-        // Update artist document with abbreviation field
-        await collection.updateOne(
-          { _id: artist._id },
-          { $set: { abbreviation: abbreviation } }
-        );
+        // Prepare bulk update operations
+        bulkUpdates.push({
+          updateOne: {
+            filter: { _id: artist._id },
+            update: { $set: { abbreviation: abbreviation } },
+          },
+        });
       }
+    }
+
+    // Perform bulk update to improve performance
+    if (bulkUpdates.length > 0) {
+      await collection.bulkWrite(bulkUpdates);
     }
 
     console.log('Abbreviations added to all artists successfully');
@@ -44,5 +47,4 @@ async function addAbbreviations() {
   }
 }
 
-// Execute the function to add abbreviations
 addAbbreviations();
