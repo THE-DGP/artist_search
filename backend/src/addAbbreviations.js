@@ -14,7 +14,7 @@ async function addAbbreviations() {
     await client.connect();
     console.log('MongoDB connected for adding abbreviations');
 
-    const db = client.db('local'); // Replace 'local' with your actual database name if different
+    const db = client.db('task'); // Replace 'local' with your actual database name if different
     const collection = db.collection('artists');
 
     // Fetch all artist names from the collection
