@@ -24,7 +24,7 @@ const Home = () => {
     }
 
     try {
-      const response = await axios.get(`https://artist-search-bck.vercel.app/api/suggest?q=${value}`);
+      const response = await axios.get(`https://artist-search.onrender.com/api/suggest?q=${value}`);
       if (Array.isArray(response.data)) {
         setSuggestions(response.data);
       } else {
@@ -52,7 +52,7 @@ const Home = () => {
     setSuggestions([]);
 
     try {
-      const response = await axios.get(`https://artist-search-bck.vercel.app/api/suggest?q=${searchValue}`);
+      const response = await axios.get(`https://artist-search.onrender.com/api/suggest?q=${searchValue}`);
       if (Array.isArray(response.data)) {
         setArtistDetails(response.data);
       } else {
