@@ -4,19 +4,29 @@ const { MongoClient } = require('mongodb');
 
 let client;
 
-const connectDB = async () => {
+const connectDB = async (retries = 5, delay = 5000) => {
   if (client) return client; // Reuse the existing client
 
-  try {
-    const uri = process.env.MONGO_URI;
-    client = new MongoClient(uri, { useNewUrlParser: true });
-    await client.connect();
-    console.log("MongoDB connected successfully.");
-    return client;
-  } catch (error) {
-    console.error("Failed to connect to MongoDB:", error);
-    throw error;
+  while (retries) {
+    try {
+      const uri = process.env.MONGO_URI;
+      client = new MongoClient(uri, {
+        useNewUrlParser: true,
+        connectTimeoutMS: 30000, // Increase connection timeout to 30 seconds
+        serverSelectionTimeoutMS: 30000, // Increase server selection timeout to 30 seconds
+        socketTimeoutMS: 45000, // Increase socket timeout to 45 seconds
+      });
+      await client.connect();
+      console.log("Successfully connected to MongoDB");
+      return client;
+    } catch (error) {
+      console.error(`Failed to connect to MongoDB, attempts remaining: ${retries - 1}`, error);
+      retries -= 1;
+      await new Promise(res => setTimeout(res, delay));
+    }
   }
+
+  throw new Error("Failed to connect to MongoDB after multiple attempts");
 };
 
 module.exports = connectDB;
