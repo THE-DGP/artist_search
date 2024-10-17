@@ -11,7 +11,7 @@ require('dotenv').config();
 const uri = "mongodb+srv://devdgp2003:Yc1WxLqgAhUclKto@cluster0.akfzt.mongodb.net/taskretryWrites=true&w=majority&appName=Cluster0";
 
 // Create a MongoClient with the MongoDB Atlas URI
-const client = await mongoose.connect(uri);
+const client = new MongoClient(uri);
 
 // Create a Trie instance and artistsData array
 const artistTrie = new Trie();
