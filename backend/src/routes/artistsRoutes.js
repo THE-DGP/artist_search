@@ -1,6 +1,7 @@
+// src/routes/artistsRoutes.js
+
 const express = require('express');
 const router = express.Router();
-const mongoose = require('mongoose'); // Import Mongoose for connection status check
 const Artist = require('../models/Artist'); // Import the Artist model
 const Trie = require('../utils/trie');
 const Fuse = require('fuse.js');
@@ -12,21 +13,23 @@ let artistsData = [];
 // Load artist names into the Trie, including abbreviations
 async function loadArtistsIntoTrie() {
   try {
-    // Wait until Mongoose connection is ready
-    if (mongoose.connection.readyState !== 1) {
-      console.error('MongoDB connection is not established yet. Please wait.');
-      return; // Exit early if the connection is not established
-    }
-
     console.log('Start loading artists into the Trie');
 
     // Fetch all artist names from the database using Mongoose
     artistsData = await Artist.find({}, { name: 1, genres: 1, location: 1 });
 
+    // Verify if we have fetched any data from MongoDB
+    if (artistsData.length === 0) {
+      console.error('No artist data found in the database');
+      return;
+    }
+
     // Insert artist names and abbreviations into the Trie
     artistsData.forEach(artist => {
       if (artist.name) {
-        artistTrie.insert(artist.name, artist.name);
+        // Convert artist name to lowercase before inserting into the Trie
+        const lowerCaseName = artist.name.toLowerCase();
+        artistTrie.insert(lowerCaseName, artist.name);
         console.log(`Inserted artist into Trie: ${artist.name}`);
 
         // Create and insert abbreviations into the Trie
@@ -44,26 +47,24 @@ async function loadArtistsIntoTrie() {
   }
 }
 
-// Wait until the MongoDB connection is open before attempting to load the Trie
-mongoose.connection.on('connected', () => {
-  console.log('MongoDB connection established. Loading Trie...');
-  loadArtistsIntoTrie();
-});
+// Load artists into Trie when server starts
+loadArtistsIntoTrie();
 
 // Search for artist suggestions based on a prefix using the Trie
 router.get('/suggest', async (req, res) => {
-  const prefix = req.query.q;
+  let prefix = req.query.q;
 
   if (!prefix) {
     console.error("Suggest endpoint called without a prefix");
     return res.status(400).json({ error: 'Please provide a search prefix.' });
   }
 
+  // Convert prefix to lowercase to ensure case-insensitive search
+  prefix = prefix.toLowerCase();
   console.log(`Searching Trie for prefix: ${prefix}`);
 
   // Search for suggestions in the Trie
   const suggestionsFromTrie = artistTrie.search(prefix);
-
   console.log(`Suggestions from Trie: ${suggestionsFromTrie}`);
 
   // Use Fuse.js for fuzzy search if Trie results are insufficient
@@ -74,7 +75,6 @@ router.get('/suggest', async (req, res) => {
   };
   const fuse = new Fuse(artistsData, options);
   const suggestionsFromFuse = fuse.search(prefix).map(result => result.item.name);
-
   console.log(`Suggestions from Fuse.js: ${suggestionsFromFuse}`);
 
   // Combine suggestions and limit to 8
@@ -97,14 +97,11 @@ router.get('/search', async (req, res) => {
   console.log(`Searching for artist details for: ${artistName}`);
 
   try {
-    // Wait until Mongoose connection is ready before querying
-    if (mongoose.connection.readyState !== 1) {
-      console.error('MongoDB connection is not established yet. Please wait.');
-      return res.status(500).json({ error: 'Database connection is not ready yet. Please try again later.' });
-    }
+    // Convert the artistName to lowercase for matching in case-insensitive manner
+    const lowerCaseName = artistName.toLowerCase();
 
     // Fetch artist details that exactly match the artist name using Mongoose
-    const artistDetails = await Artist.find({ name: artistName });
+    const artistDetails = await Artist.find({ name: new RegExp(`^${lowerCaseName}$`, 'i') });
 
     console.log(`Artist Details Found: ${JSON.stringify(artistDetails)}`);
 
