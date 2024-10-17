@@ -19,7 +19,7 @@ app.use(cors(
 app.use(express.json()); // Parse JSON requests
 
 // Define Routes
-const artistsRoutes = require('./src/routes/artistsRoutes'); 
+const artistsRoutes = require('../src/routes/artistsRoutes'); 
 
 // Start the server after connecting to MongoDB
 const startServer = async () => {
