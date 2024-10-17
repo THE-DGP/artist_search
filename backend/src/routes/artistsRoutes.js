@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const mongoose = require('mongoose'); // Import Mongoose for connection status check
 const Artist = require('../models/Artist'); // Import the Artist model
 const Trie = require('../utils/trie');
 const Fuse = require('fuse.js');
@@ -11,6 +12,12 @@ let artistsData = [];
 // Load artist names into the Trie, including abbreviations
 async function loadArtistsIntoTrie() {
   try {
+    // Wait until Mongoose connection is ready
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB connection is not established yet. Please wait.');
+      return; // Exit early if the connection is not established
+    }
+
     console.log('Start loading artists into the Trie');
 
     // Fetch all artist names from the database using Mongoose
@@ -37,8 +44,11 @@ async function loadArtistsIntoTrie() {
   }
 }
 
-// Load artists into Trie when server starts
-loadArtistsIntoTrie();
+// Wait until the MongoDB connection is open before attempting to load the Trie
+mongoose.connection.on('connected', () => {
+  console.log('MongoDB connection established. Loading Trie...');
+  loadArtistsIntoTrie();
+});
 
 // Search for artist suggestions based on a prefix using the Trie
 router.get('/suggest', async (req, res) => {
@@ -87,6 +97,12 @@ router.get('/search', async (req, res) => {
   console.log(`Searching for artist details for: ${artistName}`);
 
   try {
+    // Wait until Mongoose connection is ready before querying
+    if (mongoose.connection.readyState !== 1) {
+      console.error('MongoDB connection is not established yet. Please wait.');
+      return res.status(500).json({ error: 'Database connection is not ready yet. Please try again later.' });
+    }
+
     // Fetch artist details that exactly match the artist name using Mongoose
     const artistDetails = await Artist.find({ name: artistName });
 
