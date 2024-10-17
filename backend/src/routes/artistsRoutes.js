@@ -8,37 +8,28 @@ const Fuse = require('fuse.js');
 const artistTrie = new Trie();
 let artistsData = [];
 
-// Function to load artists into the Trie in batches
-async function loadArtistsInBatches(batchSize = 500) {
+// Load artist names into the Trie, including abbreviations
+async function loadArtistsIntoTrie() {
   try {
-    let skip = 0;
-    let hasMore = true;
+    console.log('Start loading artists into the Trie');
 
-    console.log("Start loading artists into the Trie in batches");
+    // Fetch all artist names from the database using Mongoose
+    artistsData = await Artist.find({}, { name: 1, genres: 1, location: 1 });
 
-    while (hasMore) {
-      const batch = await Artist.find({}, { name: 1, genres: 1, location: 1 }).skip(skip).limit(batchSize);
+    // Insert artist names and abbreviations into the Trie
+    artistsData.forEach(artist => {
+      if (artist.name) {
+        artistTrie.insert(artist.name, artist.name);
+        console.log(`Inserted artist into Trie: ${artist.name}`);
 
-      if (batch.length > 0) {
-        batch.forEach(artist => {
-          if (artist.name) {
-            artistTrie.insert(artist.name, artist.name);
-            console.log(`Inserted artist into Trie: ${artist.name}`);
-
-            // Insert abbreviations into the Trie
-            const abbreviation = artist.name.split(' ')
-              .map(word => word[0].toUpperCase())
-              .join('');
-            artistTrie.insert(abbreviation, artist.name);
-            console.log(`Inserted abbreviation into Trie: ${abbreviation}`);
-          }
-        });
-        skip += batchSize;
-        console.log(`Loaded ${batch.length} artists into Trie, total loaded: ${skip}`);
-      } else {
-        hasMore = false;
+        // Create and insert abbreviations into the Trie
+        const abbreviation = artist.name.split(' ')
+          .map(word => word[0].toUpperCase())
+          .join('');
+        artistTrie.insert(abbreviation, artist.name);
+        console.log(`Inserted abbreviation into Trie: ${abbreviation}`);
       }
-    }
+    });
 
     console.log('Artists loaded into Trie successfully');
   } catch (err) {
@@ -47,7 +38,7 @@ async function loadArtistsInBatches(batchSize = 500) {
 }
 
 // Load artists into Trie when server starts
-loadArtistsInBatches();
+loadArtistsIntoTrie();
 
 // Search for artist suggestions based on a prefix using the Trie
 router.get('/suggest', async (req, res) => {
@@ -96,7 +87,7 @@ router.get('/search', async (req, res) => {
   console.log(`Searching for artist details for: ${artistName}`);
 
   try {
-    // Fetch artist details that exactly match the artist name
+    // Fetch artist details that exactly match the artist name using Mongoose
     const artistDetails = await Artist.find({ name: artistName });
 
     console.log(`Artist Details Found: ${JSON.stringify(artistDetails)}`);
